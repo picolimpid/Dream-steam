@@ -1,0 +1,94 @@
+
+==============================================================================
+E0  Sample flow and descriptives
+==============================================================================
+raw reviews             24395   games=20
+after fixed filters     17974
+kept or stopped         10737   (middle group dropped: 7237)
+zero helpful votes     83.8%   max votes_up=305
+num_games_owned == 0   57.9%  (private profiles -> not usable as control)
+edited reviews         6.6%
+
+==============================================================================
+E1  Raw four-group comparison (no matching)
+==============================================================================
+                n  mean_votes  median  any_vote  hours_at  length
+POS stopped  4561        0.67     0.0      0.16     66.48    46.0
+POS kept     5638        0.27     0.0      0.13     21.33    31.0
+NEG stopped   383        2.02     1.0      0.62     32.18   100.0
+NEG kept      155        1.59     1.0      0.51     35.97    62.0
+-> note how groups differ on hours_at / length: raw gaps are confounded
+
+==============================================================================
+E2  Matched within-stratum comparison (CEM: game x verdict x hours x length x month)
+==============================================================================
+votes_up    POS kept-stopped = -0.323 (n=7463, strata=824)   NEG kept-stopped = -0.264 (n=90, strata=35)
+any_vote    POS kept-stopped = -0.006 (n=7463, strata=824)   NEG kept-stopped = -0.006 (n=90, strata=35)
+log_votes   POS kept-stopped = -0.019 (n=7463, strata=824)   NEG kept-stopped = -0.071 (n=90, strata=35)
+H1 predicts NEG < 0, H2 predicts POS > 0
+
+==============================================================================
+E3  Regression: game x verdict, hours-bin x verdict, length-bin x verdict FE (clustered by game)
+==============================================================================
+Poisson   kept | POS : IRR=0.84 [0.43,1.63] p=0.604
+Poisson   kept | NEG : IRR=1.20 [0.69,2.10] p=0.520
+          H1 vs H2 difference p=0.371
+OLS any_vote  POS: b=+0.003 (se 0.009) p=0.767   NEG: b=-0.060 (se 0.049) p=0.221
+OLS log_votes POS: b=-0.005 (se 0.009) p=0.548   NEG: b=-0.057 (se 0.058) p=0.323
+
+==============================================================================
+E4  Dose-response: playtime ratio bins (log1p votes, within game via demeaning)
+==============================================================================
+          mean_POS  mean_NEG  size_POS  size_NEG
+rbin                                            
+<1.1x        0.012     0.060      4560       383
+1.1-1.5x    -0.002    -0.069      4231       224
+1.5-2x       0.004    -0.033      2337       105
+2-3x        -0.010    -0.018      2042        62
+3-5x        -0.020    -0.088      1543        42
+>=5x        -0.001     0.011      2385        60
+(values are deviations from game x verdict x hours-bin mean; a monotone trend is more convincing than a cutoff)
+
+==============================================================================
+E5  Robustness: kept-playing threshold
+==============================================================================
+1.5x  n=12761  POS: b=-0.004 (se 0.010) p=0.648   NEG: b=-0.055 (se 0.049) p=0.263
+2.0x  n=10737  POS: b=-0.005 (se 0.009) p=0.548   NEG: b=-0.057 (se 0.058) p=0.323
+3.0x  n= 8890  POS: b=+0.001 (se 0.009) p=0.945   NEG: b=-0.085 (se 0.071) p=0.230
+
+==============================================================================
+E6  Alternative outcome and negative-control outcome
+==============================================================================
+weighted_vote_score  POS: b=-0.000 (se 0.000) p=0.423   NEG: b=+0.001 (se 0.004) p=0.849
+log funny votes      POS: b=-0.005 (se 0.006) p=0.431   NEG: b=+0.100 (se 0.054) p=0.067
+(funny votes are not about credibility: an effect here signals visibility/exposure confounding)
+
+==============================================================================
+E7  Placebo: shuffle kept within game x verdict x hours-bin (1000 permutations)
+==============================================================================
+POS observed -0.005  placebo 95% range [-0.015,+0.016]  permutation p=0.543
+NEG observed -0.057  placebo 95% range [-0.126,+0.093]  permutation p=0.356
+
+==============================================================================
+E8  Sensitivity to what we fix by sampling
+==============================================================================
+main (all filters)       n=10737  POS: b=-0.005 (se 0.009) p=0.548   NEG: b=-0.057 (se 0.058) p=0.323
+drop purchase/EA filter  n=13405  POS: b=+0.002 (se 0.008) p=0.782   NEG: b=-0.040 (se 0.051) p=0.442
+keep edited reviews      n=11506  POS: b=-0.007 (se 0.008) p=0.356   NEG: b=+0.010 (se 0.076) p=0.892
+min 0h at review         n=10843  POS: b=-0.003 (se 0.009) p=0.715   NEG: b=-0.058 (se 0.050) p=0.244
+min 5h at review         n= 9802  POS: b=-0.004 (se 0.009) p=0.684   NEG: b=-0.079 (se 0.051) p=0.127
+
+==============================================================================
+E9  Heterogeneity: per-game NEG effect (is it driven by a few games?)
+==============================================================================
+                 game  n_neg  share_kept  raw_gap_log_votes
+       Cyberpunk 2077     28       0.286             -0.337
+           Elden Ring     33       0.242             -0.245
+     Dead by Daylight     94       0.404             -0.228
+Red Dead Redemption 2     39       0.436             -0.184
+         Helldivers 2     23       0.348             -0.069
+                 Rust     98       0.388             -0.001
+             RimWorld     19       0.316              0.073
+        Hollow Knight     17       0.294              0.199
+      Resident Evil 4     10       0.500              0.693
+games with NEG gap < 0: 6/9

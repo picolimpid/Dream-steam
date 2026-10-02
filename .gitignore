@@ -1,0 +1,19 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Raw Steam data: contains Steam IDs and profile URLs, never commit
+pilot/data/
+data/
+*.jsonl
+*.csv
+
+# macOS / editors
+.DS_Store
+.vscode/
+.idea/
+
+# Office lock files (created while a .docx is open)
+~$*
