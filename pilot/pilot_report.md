@@ -14,6 +14,9 @@
   3. **84% of reviews get zero votes**, so "any vote" should be a primary outcome.
   4. **Some negative reviews from heavy players look like jokes**, which is a new threat to validity.
   5. **Drop two variables:** `num_games_owned` and `weighted_vote_score` are not usable.
+- Following Prof. Saha's feedback, we added a **stratified propensity score analysis** (E10, same approach as Saha et al., ICWSM 2019).
+  - It balances kept vs. stopped reviewers on everything observable at review time: all |SMD| < 0.1, except one game indicator at 0.155.
+  - It confirms the null results above.
 - A first model specification gave a "significant" H1 result (p = 0.017). **It is an artifact of weak controls — please don't cite it.** See Section 5.
 
 ---
@@ -128,6 +131,33 @@ Including edited reviews wipes out the negative-review effect. Reviewers who kep
 ### E9. Per-game heterogeneity
 For negative reviews, 6 of the 9 games with enough data show a negative raw gap. The largest are Cyberpunk, Elden Ring, Dead by Daylight and RDR2. Each game has only 10–98 negative reviews, so these per-game gaps are very noisy.
 
+### E10. Stratified propensity score analysis (response to instructor feedback)
+
+This follows Saha et al. (ICWSM 2019), applied separately to positive and negative reviews:
+
+1. **Propensity model.** A logistic regression predicts P(kept playing) from pre-treatment covariates: log hours at review (plus its square), log review length, review date, log author review count, and game.
+2. **Stratification.** Reviews are split into propensity strata: 10 for positive reviews, 5 for negative. Strata that lack both kept and stopped reviewers are dropped.
+3. **Balance check.** We compare standardized mean differences (SMD) before and after stratification.
+4. **Effect estimate.** Within-stratum differences are averaged, weighted by stratum size, with a bootstrapped 95% CI.
+
+| Covariate | POS: SMD before → after | NEG: SMD before → after |
+|---|---|---|
+| log hours at review | −0.72 → +0.03 | −0.10 → +0.05 |
+| log review length | −0.22 → +0.01 | −0.19 → +0.05 |
+| review date | +0.06 → +0.01 | +0.09 → +0.01 |
+| log author #reviews | −0.34 → −0.06 | −0.49 → −0.09 |
+| game (max \|SMD\|) | 0.51 → 0.05 | 0.49 → 0.16 |
+
+| Outcome | POS effect [95% CI] | NEG effect [95% CI] |
+|---|---|---|
+| Any vote | −0.001 [−0.022, +0.019] | −0.030 [−0.131, +0.071] |
+| log(1 + votes) | −0.014 [−0.032, +0.004] | −0.008 [−0.162, +0.167] |
+
+- **Stratification achieves good balance.** Before matching, kept-playing positive reviewers had written their reviews far earlier (SMD −0.72). After stratification, every covariate is within the 0.1 threshold except one game indicator in the negative group (0.16).
+- **Positive reviews: a precise null.**
+- **Negative reviews: uninformative.** Only 430 reviews in 4 strata survive trimming, and the CI is wide. This again points to oversampling negative reviews.
+- **Caveat.** The API reports the author's *current* review count, not the count at review time, so this covariate is partly post-treatment. In the full study we will check that results hold without it.
+
 ## 5. A caution on model specification
 
 Our first specification controlled for hours-at-review and review length **linearly**. It produced:
@@ -152,20 +182,24 @@ The cause is that kept-playing negative reviews are much shorter, and a linear l
 
 1. **Collect negative reviews separately** using `review_type=negative`, so the sample has roughly as many negative reviews as positive ones.
 2. **Scale to about 60 games first**, then decide whether 200–300 is needed based on the new standard errors.
-3. **Main model:** OLS/LPM with game × verdict, hours-bin × verdict and length-bin × verdict fixed effects, clustered by game.
+3. **Main causal design:** stratified propensity score analysis (E10), with balance tables reported. The models are robustness checks:
+   - **OLS/LPM** with game × verdict, hours-bin × verdict and length-bin × verdict fixed effects, clustered by game.
    - **Primary outcomes:** any vote and log votes.
    - **Secondary:** Poisson/negative binomial models for vote counts.
 4. **Always report** the placebo (permutation) test and the threshold robustness checks alongside the main estimate.
 5. **Add a joke-review filter** and report results with and without it.
 6. **Drop `weighted_vote_score` and `num_games_owned`** from the design.
-7. **Keep the two-snapshot plan.** Votes are cumulative, so new votes between snapshots are the cleanest test of whether *current* playtime matters.
+7. **Keep the two-snapshot plan.** It also fixes the time order for the causal design.
+   - Define kept vs. stopped at snapshot 1.
+   - Use **new votes between snapshots** as the outcome.
+   - The treatment then precedes the outcome. Right now, the playtime and the votes accumulate over the same period.
 
 ## 8. Reproducing the pilot
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install pandas numpy scipy statsmodels
 .venv/bin/python pilot/collect.py    # ~15 min; resumes automatically if rate-limited (HTTP 429)
-.venv/bin/python pilot/analyze.py    # runs E0–E9; full output in pilot/results.txt
+.venv/bin/python pilot/analyze.py    # runs E0–E10; full output in pilot/results.txt
 ```
 
 Raw data is saved to `pilot/data/reviews_raw.jsonl`. It contains Steam IDs, so **do not commit or share it publicly.**

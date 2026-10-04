@@ -109,6 +109,55 @@ def ols_fe(d, y):
     return smf.ols(f, d).fit(cov_type="cluster", cov_kwds={"groups": d["appid"]})
 
 
+# Pre-treatment covariates: everything known at the moment the review was posted.
+PS_COVARS = ["log_hours_at", "log_len", "age_days", "log_nrev"]
+
+
+def smd(x, t, w=None):
+    """Standardized mean difference treated - control; with strata labels w, the
+    within-stratum gaps are averaged by stratum size (subclassification)."""
+    sd = np.sqrt((x[t == 1].var() + x[t == 0].var()) / 2)
+    if sd == 0:
+        return 0.0
+    if w is None:
+        return (x[t == 1].mean() - x[t == 0].mean()) / sd
+    df = pd.DataFrame({"x": x, "t": t, "s": w})
+    g = df.groupby(["s", "t"])["x"].mean().unstack("t")
+    n = df.groupby("s").size()
+    return np.average(g[1] - g[0], weights=n[g.index]) / sd
+
+
+def ps_stratify(sub, n_strata, min_per_arm=3):
+    """Saha et al.-style stratified propensity score analysis within one verdict group.
+    Returns the sub-sample kept after trimming, with a 'stratum' column."""
+    sub = sub.copy()
+    f = "kept ~ " + " + ".join(PS_COVARS) + " + I(log_hours_at**2) + C(appid)"
+    m = smf.glm(f, sub, family=__import__("statsmodels.api").api.families.Binomial()).fit()
+    sub["ps"] = m.predict(sub)
+    sub["stratum"] = pd.qcut(sub["ps"], n_strata, labels=False, duplicates="drop")
+    counts = sub.groupby("stratum")["kept"].agg(["sum", "size"])
+    ok = counts[(counts["sum"] >= min_per_arm) & (counts["size"] - counts["sum"] >= min_per_arm)].index
+    return sub[sub["stratum"].isin(ok)]
+
+
+def strat_effect(sub, y):
+    g = sub.groupby(["stratum", "kept"])[y].mean().unstack("kept")
+    n = sub.groupby("stratum").size()
+    return np.average(g[1] - g[0], weights=n[g.index])
+
+
+def strat_bootstrap(sub, y, reps=1000):
+    """Resample within strata, keeping the propensity-score strata fixed."""
+    groups = [s.reset_index(drop=True) for _, s in sub.groupby("stratum")]
+    est = []
+    for _ in range(reps):
+        b = pd.concat([s.iloc[RNG.integers(0, len(s), len(s))] for s in groups])
+        if b.groupby("stratum")["kept"].nunique().min() < 2:
+            continue
+        est.append(strat_effect(b, y))
+    return np.percentile(est, [2.5, 97.5])
+
+
 def fmt_coef(m, name, irr=False):
     b, se, p = m.params[name], m.bse[name], m.pvalues[name]
     if irr:
@@ -235,6 +284,27 @@ def main():
     h = pd.DataFrame(rows, columns=["game", "n_neg", "share_kept", "raw_gap_log_votes"]).sort_values("raw_gap_log_votes")
     print(h.round(3).to_string(index=False))
     print(f"games with NEG gap < 0: {(h.raw_gap_log_votes < 0).sum()}/{len(h)}")
+
+    section("E10 Stratified propensity score analysis (Saha et al. 2019 style), per verdict")
+    print("PS model: logit(kept) ~ log hours at review (+sq) + log length + review date + log author #reviews + game")
+    for neg, label, n_strata in [(0, "POS", 10), (1, "NEG", 5)]:
+        sub = d[d.neg == neg]
+        st = ps_stratify(sub, n_strata)
+        print(f"\n{label}: n={len(sub)} -> {len(st)} after trimming strata without overlap "
+              f"(kept={st.kept.sum()}, stopped={(1 - st.kept).sum()}, strata={st.stratum.nunique()})")
+        print(f"  {'covariate':16s} {'SMD before':>11s} {'SMD after':>10s}")
+        for c in PS_COVARS:
+            print(f"  {c:16s} {smd(sub[c].values, sub.kept.values):+11.3f} "
+                  f"{smd(st[c].values, st.kept.values, st.stratum.values):+10.3f}")
+        games = pd.get_dummies(sub.appid, dtype=float)
+        games_st = pd.get_dummies(st.appid, dtype=float)
+        before = max(abs(smd(games[g].values, sub.kept.values)) for g in games)
+        after = max(abs(smd(games_st[g].values, st.kept.values, st.stratum.values)) for g in games_st)
+        print(f"  {'game (max |SMD|)':16s} {before:11.3f} {after:10.3f}")
+        for y in ["any_vote", "log_votes"]:
+            lo, hi = strat_bootstrap(st, y)
+            print(f"  effect on {y:9s} = {strat_effect(st, y):+.3f}  95% CI [{lo:+.3f}, {hi:+.3f}]")
+    print("\nBalance rule of thumb: |SMD| < 0.1 good, < 0.25 acceptable.")
 
 
 if __name__ == "__main__":

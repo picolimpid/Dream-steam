@@ -92,3 +92,30 @@ Red Dead Redemption 2     39       0.436             -0.184
         Hollow Knight     17       0.294              0.199
       Resident Evil 4     10       0.500              0.693
 games with NEG gap < 0: 6/9
+
+==============================================================================
+E10 Stratified propensity score analysis (Saha et al. 2019 style), per verdict
+==============================================================================
+PS model: logit(kept) ~ log hours at review (+sq) + log length + review date + log author #reviews + game
+
+POS: n=10199 -> 10199 after trimming strata without overlap (kept=5638, stopped=4561, strata=10)
+  covariate         SMD before  SMD after
+  log_hours_at          -0.718     +0.030
+  log_len               -0.218     +0.008
+  age_days              +0.062     +0.010
+  log_nrev              -0.336     -0.058
+  game (max |SMD|)       0.505      0.051
+  effect on any_vote  = -0.001  95% CI [-0.022, +0.019]
+  effect on log_votes = -0.014  95% CI [-0.032, +0.004]
+
+NEG: n=538 -> 430 after trimming strata without overlap (kept=154, stopped=276, strata=4)
+  covariate         SMD before  SMD after
+  log_hours_at          -0.096     +0.049
+  log_len               -0.187     +0.051
+  age_days              +0.090     +0.014
+  log_nrev              -0.486     -0.093
+  game (max |SMD|)       0.490      0.155
+  effect on any_vote  = -0.030  95% CI [-0.131, +0.071]
+  effect on log_votes = -0.008  95% CI [-0.162, +0.167]
+
+Balance rule of thumb: |SMD| < 0.1 good, < 0.25 acceptable.
