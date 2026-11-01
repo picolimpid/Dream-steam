@@ -1,0 +1,16 @@
+threads fetched: 831  status: {'ok': 818, 'unavailable': 13}  spam comments removed: 214
+threads with readable comments: 667, comments: 1127
+comments mentioning playtime: 66 (5.9%)
+threads with >=1 playtime mention: 7.9%
+comments addressing the REVIEWER's playtime (strict): 41 (3.6%); threads: 5.1%
+
+By verdict and later-playtime group (thread level):
+             threads  share_with_mention  comments  mentions  share_directed  directed
+POS kept         148               0.054       208        10           0.014         2
+POS middle       218               0.046       328        10           0.028         6
+POS stopped      116               0.017       188         2           0.017         2
+NEG kept          25               0.200        72         7           0.120         4
+NEG middle        65               0.154       143        13           0.108        10
+NEG stopped       95               0.189       188        24           0.147        17
+
+Wrote 80 examples to data/comment_coding_sample.csv for manual precision/recall checks

@@ -1,0 +1,28 @@
+
+================================================================================
+Treatment: sarcasm
+================================================================================
+POS: treated 920 / 22744;  after trimming 22744 in 5 strata
+   max |SMD| before 0.50  after 0.08
+   any_vote  raw gap +0.071   matched +0.071  [+0.036, +0.111]
+   log_votes raw gap +0.085   matched +0.069  [+0.029, +0.117]
+   any_funny raw gap +0.067   matched +0.045  [+0.026, +0.068]
+NEG: treated 453 / 1583;  after trimming 1583 in 5 strata
+   max |SMD| before 0.75  after 0.07
+   any_vote  raw gap +0.042   matched -0.051  [-0.106, +0.012]
+   log_votes raw gap +0.172   matched -0.023  [-0.105, +0.062]
+   any_funny raw gap +0.056   matched +0.004  [-0.045, +0.061]
+
+================================================================================
+Treatment: profanity
+================================================================================
+POS: treated 458 / 22744;  after trimming 22744 in 5 strata
+   max |SMD| before 0.53  after 0.11
+   any_vote  raw gap +0.030   matched -0.008  [-0.047, +0.033]
+   log_votes raw gap +0.033   matched -0.015  [-0.048, +0.023]
+   any_funny raw gap +0.030   matched +0.006  [-0.018, +0.032]
+NEG: treated 210 / 1583;  after trimming 1583 in 5 strata
+   max |SMD| before 0.25  after 0.09
+   any_vote  raw gap -0.079   matched -0.063  [-0.146, +0.007]
+   log_votes raw gap -0.091   matched -0.094  [-0.195, +0.025]
+   any_funny raw gap +0.071   matched +0.050  [-0.018, +0.126]

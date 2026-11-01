@@ -9,6 +9,7 @@ pilot/data/
 data/
 *.jsonl
 *.csv
+*.zip
 
 # macOS / editors
 .DS_Store

@@ -1,0 +1,90 @@
+
+==========================================================================================
+R0  Sample and feature descriptives
+==========================================================================================
+reviews 24326 (POS 22743, NEG 1583), games 20
+                POS mean  NEG mean
+words             24.898    72.136
+readability       69.143    68.374
+formatted          0.007     0.014
+price_mention      0.047     0.113
+log_aspects        0.234     0.544
+sent_intensity     0.487     0.526
+sent_mismatch      0.040     0.286
+profanity          0.020     0.133
+ascii_art          0.002     0.001
+short              0.737     0.487
+
+==========================================================================================
+R1  Multicollinearity check (VIF, full sample, standardized)
+==========================================================================================
+log_words         4.44
+short             3.06
+log_aspects       2.10
+log_lines         1.65
+sent_intensity    1.62
+log_hours_at      1.28
+(VIF > 5 would signal redundant predictors)
+POS: dropped as too rare or absorbed by game FE: []
+NEG: dropped as too rare or absorbed by game FE: ['ascii_art', 'formatted']
+
+==========================================================================================
+R2  Coefficients: any helpful vote (percentage points; continuous = per 1 SD)
+==========================================================================================
+                                          POS_b  POS_q_bh   NEG_b  NEG_q_bh
+content  ASCII art                       22.900     0.031     NaN       NaN
+content  BBCode formatting               10.927     0.003     NaN       NaN
+content  Game aspects mentioned (log)    -0.845     0.031   2.101     0.233
+content  Line breaks (log)                1.547     0.000   0.932     0.728
+content  Length (log words)               4.612     0.000  11.156     0.000
+content  Numbers per 100 words            0.162     0.458   1.619     0.003
+content  Mentions price/value             1.404     0.506  -3.258     0.728
+content  Contains filtered profanity      2.458     0.278  -7.388     0.237
+content  Readability (Flesch)            -0.113     0.697  -0.091     0.953
+content  Sentiment intensity             -1.945     0.000   1.165     0.728
+content  Sentiment contradicts verdict    5.169     0.006  -0.495     0.953
+content  Short (<20 words)                3.203     0.001   7.029     0.233
+context  Edited                          -0.505     0.674 -27.677     0.000
+context  Received for free                4.409     0.035   0.467     0.953
+context  Non-Steam key                    4.040     0.000   3.755     0.118
+reviewer Hours at review (log)            2.629     0.000   1.676     0.703
+reviewer Author #reviews (log)            1.535     0.000   1.125     0.703
+reviewer Later/at-review playtime (log)   0.709     0.019   0.112     0.953
+q_bh = Benjamini-Hochberg adjusted p; binary features: effect of having the feature
+
+==========================================================================================
+R3  Same model, outcome log(1 + helpful votes)
+==========================================================================================
+                                         POS_b  POS_q_bh  NEG_b  NEG_q_bh
+content  ASCII art                       0.231     0.109    NaN       NaN
+content  BBCode formatting               0.157     0.045    NaN       NaN
+content  Game aspects mentioned (log)   -0.001     0.845  0.072     0.003
+content  Line breaks (log)               0.023     0.000  0.061     0.018
+content  Length (log words)              0.051     0.000  0.165     0.002
+content  Numbers per 100 words           0.001     0.508  0.025     0.005
+content  Mentions price/value            0.008     0.785 -0.086     0.451
+content  Contains filtered profanity     0.014     0.550 -0.181     0.028
+content  Readability (Flesch)           -0.003     0.508 -0.006     0.783
+content  Sentiment intensity            -0.019     0.000  0.034     0.193
+content  Sentiment contradicts verdict   0.056     0.055  0.055     0.673
+content  Short (<20 words)               0.014     0.326  0.115     0.118
+context  Edited                         -0.007     0.739 -0.427     0.000
+context  Received for free               0.056     0.012  0.033     0.783
+context  Non-Steam key                   0.035     0.000  0.081     0.021
+reviewer Hours at review (log)           0.033     0.000  0.074     0.002
+reviewer Author #reviews (log)           0.028     0.000  0.022     0.632
+reviewer Later/at-review playtime (log)  0.008     0.007  0.008     0.776
+
+==========================================================================================
+R4  Unique explanatory power of each feature group (drop-one, within-game R2, any vote)
+==========================================================================================
+POS: FE only R2=0.005, full R2=0.028 | unique:  content 0.014  reviewer 0.004  context 0.002
+NEG: FE only R2=0.137, full R2=0.213 | unique:  content 0.043  reviewer 0.001  context 0.039
+
+==========================================================================================
+R5  Joke/sarcasm markers vs. funny votes (validity check for the joke filter)
+==========================================================================================
+Sentiment contradicts verdict  funny/helpful with=0.66/1.90  without=0.13/0.57
+Contains filtered profanity    funny/helpful with=0.31/1.17  without=0.16/0.63
+ASCII art                      funny/helpful with=0.59/1.59  without=0.16/0.65
+Short (<20 words)              funny/helpful with=0.09/0.28  without=0.36/1.60
